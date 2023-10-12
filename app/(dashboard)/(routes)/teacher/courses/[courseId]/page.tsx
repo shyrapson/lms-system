@@ -1,8 +1,14 @@
+import { DescriptionForm } from '@/app/(dashboard)/(routes)/teacher/courses/[courseId]/_components/description-form';
+
+import { TitleForm } from '@/app/(dashboard)/(routes)/teacher/courses/[courseId]/_components/title-form';
+import { IconBadge } from '@/components/icon-badge';
 import { db } from '@/lib/db';
 import { auth } from '@clerk/nextjs';
+import { LayoutDashboard } from 'lucide-react';
 import { redirect } from 'next/navigation';
+import { ImageForm } from './_components/image-form';
 
-const Course = async ({
+const CourseIdPage = async ({
   params: { courseId },
 }: {
   params: { courseId: string };
@@ -18,6 +24,7 @@ const Course = async ({
   if (!course) {
     redirect('/');
   }
+  console.log(course);
   const requiredFields = [
     course.title,
     course.description,
@@ -40,9 +47,19 @@ const Course = async ({
           </span>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-16"></div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-16">
+        <div>
+          <div className="flex items-center gap-x-2">
+            <IconBadge icon={LayoutDashboard} />
+            <h2 className="text-xl">Customize your course</h2>
+          </div>
+          <TitleForm initialData={course} courseId={course.id} />
+          <DescriptionForm initialData={course} courseId={course.id} />
+          <ImageForm initialData={course} courseId={course.id} />
+        </div>
+      </div>
     </div>
   );
 };
 
-export default Course;
+export default CourseIdPage;
