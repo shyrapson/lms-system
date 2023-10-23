@@ -16,36 +16,34 @@ import {
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Pencil } from 'lucide-react';
+import { Pencil, PlusCircle } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { Textarea } from '@/components/ui/textarea';
-import { Course } from '@prisma/client';
+import { Chapter, Course } from '@prisma/client';
 import { cn } from '@/lib/utils';
 
-interface IDescriptionForm {
-  initialData: Course;
+interface IChaptersForm {
+  initialData: Course & { chapters: Chapter[] };
   courseId: string;
 }
 
 const formSchema = z.object({
-  description: z.string().min(1, { message: 'Title is required' }),
+  title: z.string().min(1),
 });
 
-export const DescriptionForm = ({
-  initialData,
-  courseId,
-}: IDescriptionForm) => {
-  const [isEditing, setIsEditing] = useState(false);
+export const ChaptersForm = ({ initialData, courseId }: IChaptersForm) => {
+  const [isCreating, setIsCreating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  const toggleEdit = () => setIsEditing((current) => !current);
+  const toggleCreating = () => setIsCreating((current) => !current);
   const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      description: initialData?.description || '',
+      title: initialData?.description || '',
     },
   });
 
@@ -53,9 +51,12 @@ export const DescriptionForm = ({
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const data = await axios.patch(`/api/courses/${courseId}`, values);
-      toast.success('Course updated successfully');
-      toggleEdit();
+      const data = await axios.post(
+        `/api/courses/${courseId}/chapters`,
+        values
+      );
+      toast.success('Chapter created');
+      toggleCreating();
       router.refresh();
     } catch (error) {
       toast.error('Something went wrong');
@@ -65,31 +66,21 @@ export const DescriptionForm = ({
   return (
     <div className="mt-6 border bg-slate-100 rounded-md p-4">
       <div className="font-medium flex items-center justify-between">
-        Course description
-        <Button variant="ghost" onClick={toggleEdit}>
-          {isEditing ? (
+        Course chapters
+        <Button variant="ghost" onClick={toggleCreating}>
+          {isCreating ? (
             <>Cancel</>
           ) : (
             <>
               {' '}
-              <Pencil className="h-4 w-4 mr-2" />
-              Edit description
+              <PlusCircle className="h-4 w-4 mr-2" />
+              Add a chapter
             </>
           )}
         </Button>
       </div>
-      {!isEditing && (
-        <p
-          className={cn(
-            'text-sm mt-2',
-            !initialData.description && 'text-slate-500 italic'
-          )}
-        >
-          {initialData.description || 'No description'}
-        </p>
-      )}
 
-      {isEditing && (
+      {isCreating && (
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
@@ -97,13 +88,13 @@ export const DescriptionForm = ({
           >
             <FormField
               control={form.control}
-              name="description"
+              name="title"
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Textarea
+                    <Input
                       disabled={isSubmitting}
-                      placeholder="e.g 'Advance course development' "
+                      placeholder="e.g 'Introduction to the course' "
                       {...field}
                     />
                   </FormControl>
@@ -111,13 +102,23 @@ export const DescriptionForm = ({
                 </FormItem>
               )}
             />
-            <div className="flex items-center gap-x-2">
-              <Button disabled={!isValid || isSubmitting} type="submit">
-                Save
-              </Button>
-            </div>
+
+            <Button disabled={!isValid || isSubmitting} type="submit">
+              Create
+            </Button>
           </form>
         </Form>
+      )}
+      {!isCreating && (
+        <div className={cn('text-sm mt-2', !initialData?.chapters?.length)}>
+          {initialData?.chapters?.length || 'No chapters'}
+          {/* Todo add a list */}
+        </div>
+      )}
+      {!isCreating && (
+        <p className="text-xm text-muted-foreground mt-4">
+          Drag and drop to reorder the chapters
+        </p>
       )}
     </div>
   );

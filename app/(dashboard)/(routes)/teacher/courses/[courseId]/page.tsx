@@ -4,9 +4,18 @@ import { TitleForm } from '@/app/(dashboard)/(routes)/teacher/courses/[courseId]
 import { IconBadge } from '@/components/icon-badge';
 import { db } from '@/lib/db';
 import { auth } from '@clerk/nextjs';
-import { LayoutDashboard } from 'lucide-react';
+import {
+  CircleDollarSign,
+  File,
+  LayoutDashboard,
+  ListChecks,
+} from 'lucide-react';
 import { redirect } from 'next/navigation';
 import { ImageForm } from './_components/image-form';
+import { CategoryForm } from './_components/category-form';
+import { PriceForm } from './_components/price-form';
+import { AttachmentForm } from './_components/attachment-form';
+import { ChaptersForm } from './_components/chapters-form';
 
 const CourseIdPage = async ({
   params: { courseId },
@@ -19,18 +28,40 @@ const CourseIdPage = async ({
     return redirect('/');
   }
   const course = await db.course.findUnique({
-    where: { id: courseId },
+    where: { id: courseId, userId },
+    include: {
+      Chapters: {
+        orderBy: {
+          position: 'asc',
+        },
+      },
+      attachments: {
+        orderBy: {
+          createdAt: 'desc',
+        },
+      },
+    },
   });
+  console.log(course);
+
+  const categories = await db.category.findMany({
+    orderBy: {
+      name: 'asc',
+    },
+  });
+  console.log(categories);
+
   if (!course) {
     redirect('/');
   }
-  console.log(course);
+
   const requiredFields = [
     course.title,
     course.description,
     course.imageUrl,
     course.price,
     course.categoryId,
+    course.Chapters.some((chapter) => chapter.isPublished),
   ];
 
   const totalFields = requiredFields.length;
@@ -56,6 +87,35 @@ const CourseIdPage = async ({
           <TitleForm initialData={course} courseId={course.id} />
           <DescriptionForm initialData={course} courseId={course.id} />
           <ImageForm initialData={course} courseId={course.id} />
+          <CategoryForm
+            initialData={course}
+            options={categories.map((category) => ({
+              label: category.name,
+              value: category.id,
+            }))}
+            courseId={course.id}
+          />
+        </div>
+
+        <div className="space-y-6">
+          <div>
+            <div className="flex items-center gap-x-2">
+              <IconBadge icon={ListChecks} />
+              <h2 className="text-xl">Course chapters</h2>
+            </div>
+            <ChaptersForm initialData={course} courseId={course.id} />
+          </div>
+          <div className="flex items-center gap-x-2">
+            <IconBadge icon={CircleDollarSign} />
+            <h2 className="text-xl">Sell your course</h2>
+          </div>
+          <PriceForm initialData={course} courseId={course.id} />
+          <div className="flex items-center gap-x-2">
+            <IconBadge icon={File} />
+            <h2 className="text-xl">Resource and attachment</h2>
+          </div>
+
+          <AttachmentForm initialData={course} courseId={course.id} />
         </div>
       </div>
     </div>

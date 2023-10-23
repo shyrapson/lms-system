@@ -10,6 +10,7 @@ export async function PATCH(
     const { userId } = auth();
     const { courseId } = params;
     const values = await req.json();
+    console.log(values, 'db');
     if (!userId) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
@@ -19,6 +20,7 @@ export async function PATCH(
 
       data: { ...values },
     });
+    console.log(course);
     return NextResponse.json(course);
   } catch (error) {
     console.log('[COURSE_ID]', error);
