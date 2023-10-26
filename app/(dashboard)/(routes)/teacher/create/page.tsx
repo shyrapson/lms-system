@@ -64,7 +64,7 @@ const CreateCoursesPage = () => {
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username</FormLabel>
+                  <FormLabel>Course Title</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="e.g. 'Advance web development'"

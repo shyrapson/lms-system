@@ -30,7 +30,7 @@ const CourseIdPage = async ({
   const course = await db.course.findUnique({
     where: { id: courseId, userId },
     include: {
-      Chapters: {
+      chapters: {
         orderBy: {
           position: 'asc',
         },
@@ -61,7 +61,7 @@ const CourseIdPage = async ({
     course.imageUrl,
     course.price,
     course.categoryId,
-    course.Chapters.some((chapter) => chapter.isPublished),
+    course.chapters.some((chapter) => chapter.isPublished),
   ];
 
   const totalFields = requiredFields.length;
