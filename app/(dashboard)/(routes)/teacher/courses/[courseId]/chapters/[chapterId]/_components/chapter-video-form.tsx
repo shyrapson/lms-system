@@ -2,38 +2,32 @@
 
 import * as z from 'zod';
 import axios from 'axios';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import Link from 'next/link';
+import MuxPlayer from '@mux/mux-player-react';
 import { Button } from '@/components/ui/button';
-import { ImageIcon, Pencil, PlusCircle } from 'lucide-react';
+import { Pencil, PlusCircle, Video } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { Textarea } from '@/components/ui/textarea';
-import { Course } from '@prisma/client';
+import { Chapter, MuxData } from '@prisma/client';
 import Image from 'next/image';
 import { FileUpload } from '@/components/file-upload';
 
-interface IImageForm {
-  initialData: Course;
+interface IChapterVideoForm {
+  initialData: Chapter & { muxData: MuxData | null };
   courseId: string;
+  chapterId: string;
 }
 
 const formSchema = z.object({
-  imageUrl: z.string().min(1, { message: 'Image is required' }),
+  videoUrl: z.string().min(1),
 });
 
-export const ImageForm = ({ initialData, courseId }: IImageForm) => {
+export const ChapterVideoForm = ({
+  initialData,
+  courseId,
+  chapterId,
+}: IChapterVideoForm) => {
   const [isEditing, setIsEditing] = useState(false);
   console.log(initialData);
 
@@ -42,8 +36,11 @@ export const ImageForm = ({ initialData, courseId }: IImageForm) => {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const data = await axios.patch(`/api/courses/${courseId}`, values);
-      toast.success('image updated successfully');
+      const data = await axios.patch(
+        `/api/courses/${courseId}/chapters/${chapterId}`,
+        values
+      );
+      toast.success('Chapter updated');
       toggleEdit();
       router.refresh();
     } catch (error) {
@@ -54,16 +51,16 @@ export const ImageForm = ({ initialData, courseId }: IImageForm) => {
   return (
     <div className="mt-6 border bg-slate-100 rounded-md p-4">
       <div className="font-medium flex items-center justify-between">
-        Course image
+        Chapter video
         <Button variant="ghost" onClick={toggleEdit}>
           {isEditing && <>Cancel</>}
-          {!isEditing && !initialData.imageUrl && (
+          {!isEditing && !initialData?.videoUrl && (
             <>
               <PlusCircle className="h-4 w-4 mr-2" />
-              Add image
+              Add Video
             </>
           )}
-          {!isEditing && initialData.imageUrl && (
+          {!isEditing && initialData.videoUrl && (
             <>
               {' '}
               <Pencil className="h-4 w-4 mr-2" />
@@ -73,34 +70,35 @@ export const ImageForm = ({ initialData, courseId }: IImageForm) => {
         </Button>
       </div>
       {!isEditing &&
-        (!initialData.imageUrl ? (
+        (!initialData.videoUrl ? (
           <div className="flex items-center justify-center h-60 bg-slate-200 rounded-md">
-            <ImageIcon className="h-10 w-10 text-slate-500" />
+            <Video className="h-10 w-10 text-slate-500" />
           </div>
         ) : (
           <div className="relative aspect-video mt-2">
-            <Image
-              src={initialData.imageUrl}
-              alt="upload"
-              fill
-              className="object-cover rounded-md"
-            />
+            <MuxPlayer playbackId={initialData?.muxData?.playbackId || ''} />
           </div>
         ))}
 
       {isEditing && (
         <div>
           <FileUpload
-            endpoint="courseImage"
+            endpoint="chapterVideo"
             onChange={(url) => {
               if (url) {
-                onSubmit({ imageUrl: url });
+                onSubmit({ videoUrl: url });
               }
             }}
           />
           <div className="text-xs text-muted-foreground mt-4 ">
-            16:9 aspect ratio recommended
+            Upload this Chapter&apos;s video
           </div>
+        </div>
+      )}
+      {initialData.videoUrl && !isEditing && (
+        <div className="text-xs text-muted-foreground mt-2">
+          Videos can take a few minutes to process. Refresh the page if video
+          does not appear
         </div>
       )}
     </div>
