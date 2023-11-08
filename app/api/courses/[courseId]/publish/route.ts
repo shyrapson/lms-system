@@ -30,16 +30,16 @@ export async function PATCH(
     const hasPublishedChapters = course.chapters.some(
       (chapter) => chapter.isPublished
     );
-    console.log(hasPublishedChapters);
     if (
       !course.title ||
       !course.description ||
       !course.imageUrl ||
       !hasPublishedChapters ||
-      course.categoryId
+      !course.categoryId
     ) {
       return new NextResponse('Missing required fields', { status: 401 });
     }
+    console.log(hasPublishedChapters);
 
     const publishCourse = await db.course.update({
       where: { id: params.courseId, userId },
@@ -47,7 +47,7 @@ export async function PATCH(
         isPublished: true,
       },
     });
-    console.log(publishCourse, 'reach here');
+
     return NextResponse.json(publishCourse);
   } catch (error) {
     console.log('[COURSE_ID_PUBLISH]', error);
