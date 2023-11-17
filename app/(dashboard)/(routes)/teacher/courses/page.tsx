@@ -1,6 +1,3 @@
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import React from 'react';
 import { columns } from './_components/columns';
 import { DataTable } from './_components/data-table';
 import { auth } from '@clerk/nextjs';
@@ -21,9 +18,6 @@ const CoursesPage = async () => {
   });
   return (
     <div className="m-6">
-      <Button>
-        <Link href="/teacher/create">create course</Link>
-      </Button>
       <DataTable columns={columns} data={courses} />
     </div>
   );

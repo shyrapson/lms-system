@@ -13,7 +13,7 @@ async function main() {
         { name: 'Fitness' },
         { name: 'Photography' },
         { name: 'Accounting' },
-        { name: 'Firming' },
+        { name: 'Filming' },
       ],
     });
     console.log('categories seeded successfully');
