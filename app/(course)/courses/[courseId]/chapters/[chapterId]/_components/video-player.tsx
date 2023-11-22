@@ -3,7 +3,7 @@
 import axios from 'axios';
 import MuxPlayer from '@mux/mux-player-react';
 import { useState } from 'react';
-import { Toast } from 'react-hot-toast';
+import toast, { Toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { Loader2, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -29,6 +29,28 @@ const VideoPlayer = ({
   completeOnEnd,
 }: IVideoPlayer) => {
   const [isReady, setIsReady] = useState(false);
+  const router = useRouter();
+  const confetti = useConfettiStore();
+
+  const onEnd = async () => {
+    try {
+      if (completeOnEnd) {
+        await axios.put(
+          `/api/courses/${courseId}/chapters/${chapterId}/progress`,
+          { isCompleted: true }
+        );
+      }
+      if (!nextChapterId) {
+        confetti.onOpen();
+      }
+      toast.success('Progress Updated');
+      router.refresh();
+      router.push(`/courses/${courseId}/chapters/${nextChapterId}`);
+    } catch (error) {
+      toast.error('Something went wrong');
+    }
+  };
+
   return (
     <div className="relative aspect-video">
       {!isReady && !isLocked && (
@@ -47,7 +69,7 @@ const VideoPlayer = ({
           title={title}
           className={cn(!isReady && 'hidden')}
           onCanPlay={() => setIsReady(true)}
-          onEnded={() => {}}
+          onEnded={onEnd}
           autoPlay
           playbackId={playbackId}
         />
